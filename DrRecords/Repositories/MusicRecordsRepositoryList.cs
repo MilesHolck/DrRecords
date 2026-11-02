@@ -2,7 +2,7 @@
 
 namespace DrRecords.Repositories
 {
-    public class MusicRecordsRepositoryList
+    public class MusicRecordsRepositoryList : IMusicRecordsRepositoryList
     {
         private readonly List<MusicRecord> _MusicRecords;
 
