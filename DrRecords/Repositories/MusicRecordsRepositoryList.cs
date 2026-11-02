@@ -11,13 +11,14 @@ namespace DrRecords.Repositories
         public MusicRecordsRepositoryList()
         {
             _MusicRecords = new List<MusicRecord>();
-            new MusicRecord { Id = 1, Title = "Ofelia", Artist = "Taylor Swift", Duration = 123, PublicationYear = 2023 };
-            new MusicRecord { Id = 1, Title = "music of the night", Artist = "Andrew webber", Duration = 123, PublicationYear = 1980 };
-            new MusicRecord { Id = 1, Title = "born to be wild", Artist = "Jon bon jovi", Duration = 123, PublicationYear = 1995};
-
+            _MusicRecords.Add(new MusicRecord { Id = 1, Title = "Ofelia", Artist = "Taylor Swift", Duration = 123, PublicationYear = 2023 });
+            _MusicRecords.Add(new MusicRecord { Id = 2, Title = "music of the night", Artist = "Andrew webber", Duration = 123, PublicationYear = 1980 });
+            _MusicRecords.Add(new MusicRecord { Id = 3, Title = "born to be wild", Artist = "Jon bon jovi", Duration = 123, PublicationYear = 1995 });
         }
 
-
-
+        public IEnumerable<MusicRecord> GetAllMusicRecords()
+        {
+            return _MusicRecords;
+        }
     }
 }
