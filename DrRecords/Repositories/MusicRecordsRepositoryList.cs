@@ -16,9 +16,27 @@ namespace DrRecords.Repositories
             _MusicRecords.Add(new MusicRecord { Id = 3, Title = "born to be wild", Artist = "Jon bon jovi", Duration = 123, PublicationYear = 1995 });
         }
 
-        public IEnumerable<MusicRecord> GetAllMusicRecords(string? titleStartsWith = null, string artistStartsWith = null)
+        public IEnumerable<MusicRecord> GetAllMusicRecords(string? titleStartsWith = null, string? artistStartsWith = null)
         {
-            return _MusicRecords;
+            IEnumerable<MusicRecord> filteredRecords = _MusicRecords;
+
+            if (!string.IsNullOrEmpty(titleStartsWith))
+            {
+                filteredRecords = filteredRecords.Where(
+                    m => m.Title?.StartsWith(
+                        titleStartsWith,
+                        StringComparison.OrdinalIgnoreCase) == true);
+            }
+
+            if (!string.IsNullOrEmpty(artistStartsWith))
+            {
+                filteredRecords = filteredRecords.Where(
+                    m => m.Artist?.StartsWith(
+                        artistStartsWith,
+                        StringComparison.OrdinalIgnoreCase) == true);
+            }
+
+            return filteredRecords;
         }
     }
 }
