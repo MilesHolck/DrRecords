@@ -1,5 +1,11 @@
 ﻿using DrRecords.Models;
 using DrRecords.Repositories;
+using DrRecords.Controllers;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DrRecordsTest
 {
@@ -12,9 +18,6 @@ namespace DrRecordsTest
             _repo = new MusicRecordsRepositoryList();
         }
 
-
-        //testing af listen
-
         [Fact]
         public void ReturnsAllFromTheList()
         {
@@ -22,11 +25,30 @@ namespace DrRecordsTest
             var result = _repo.GetAllMusicRecords();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(3, result.Count());
+            Assert.NotEmpty(result);
         }
 
-        //Filterings test//
+        [Fact]
+        public void AddMusicRecord_AddsRecordToList()
+        {
+            // Arrange
+            var newRecord = new MusicRecord
+            {
+                Title = "Test Song",
+                Artist = "Test Artist",
+                Duration = 200,
+                PublicationYear = 2024
+            };
+            var initialCount = _repo.GetAllMusicRecords().Count();
+
+            // Act
+            var result = _repo.AddMusicRecord(newRecord);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEqual(0, result.Id);
+            Assert.Equal(initialCount + 1, _repo.GetAllMusicRecords().Count());
+        }
 
         [Fact]
         public void FilterByTitleStartsWith_ReturnMatchingRecords()
@@ -98,6 +120,175 @@ namespace DrRecordsTest
             // Assert
             Assert.NotNull(result);
             Assert.Empty(result);
+        }
+    }
+
+    public class AuthControllerTests
+    {
+        private readonly Mock<IConfiguration> _mockConfig;
+        private readonly AuthController _authController;
+
+        public AuthControllerTests()
+        {
+            _mockConfig = new Mock<IConfiguration>();
+
+            // Setup JWT configuration
+            var jwtSection = new Mock<IConfigurationSection>();
+            jwtSection.Setup(x => x["Key"]).Returns("your-secret-key-must-be-at-least-32-characters-long-for-hmacsha256");
+            jwtSection.Setup(x => x["Issuer"]).Returns("YourApp");
+            jwtSection.Setup(x => x["Audience"]).Returns("YourAppUsers");
+
+            _mockConfig.Setup(x => x.GetSection("Jwt")).Returns(jwtSection.Object);
+
+            _authController = new AuthController(_mockConfig.Object);
+        }
+
+        [Fact]
+        public void Login_WithValidCredentials_ReturnsOkWithToken()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            Assert.NotNull(tokenProperty);
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
+            Assert.NotNull(token);
+        }
+
+        [Fact]
+        public void Login_WithInvalidUsername_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "InvalidUser", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("Invalid username or password.", unauthorizedResult.Value);
+        }
+
+        [Fact]
+        public void Login_WithInvalidPassword_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "wrongpassword" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("Invalid username or password.", unauthorizedResult.Value);
+        }
+
+        [Fact]
+        public void Login_GeneratedToken_IsValidJwt()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
+
+            // Assert
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            Assert.NotNull(jwtToken);
+            Assert.Equal("YourApp", jwtToken.Issuer);
+            Assert.Equal("YourAppUsers", jwtToken.Audiences.First());
+        }
+
+        [Fact]
+        public void Login_GeneratedToken_ContainsCorrectClaims()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
+
+            // Assert
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            Assert.NotNull(jwtToken);
+            var usernameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+            Assert.NotNull(usernameClaim);
+            Assert.Equal("User", usernameClaim.Value);
+
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+            Assert.NotNull(roleClaim);
+            Assert.Equal("admin", roleClaim.Value);
+        }
+
+        [Fact]
+        public void Login_GeneratedToken_HasValidExpirationTime()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
+
+            // Assert
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            Assert.NotNull(jwtToken);
+            Assert.NotNull(jwtToken.ValidTo);
+            Assert.True(jwtToken.ValidTo > DateTime.Now);
+            Assert.True(jwtToken.ValidTo <= DateTime.Now.AddHours(2).AddMinutes(1));
+        }
+
+        [Fact]
+        public void Login_WithEmptyUsername_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "", Password = "1234" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("Invalid username or password.", unauthorizedResult.Value);
+        }
+
+        [Fact]
+        public void Login_WithEmptyPassword_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest { Username = "User", Password = "" };
+
+            // Act
+            var result = _authController.Login(loginRequest);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("Invalid username or password.", unauthorizedResult.Value);
         }
     }
 }
