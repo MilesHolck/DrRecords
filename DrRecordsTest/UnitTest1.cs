@@ -12,6 +12,9 @@ namespace DrRecordsTest
             _repo = new MusicRecordsRepositoryList();
         }
 
+
+        //testing af listen
+
         [Fact]
         public void ReturnsAllFromTheList()
         {
@@ -22,6 +25,8 @@ namespace DrRecordsTest
             Assert.NotNull(result);
             Assert.Equal(3, result.Count());
         }
+
+        //Filterings test//
 
         [Fact]
         public void FilterByTitleStartsWith_ReturnMatchingRecords()
