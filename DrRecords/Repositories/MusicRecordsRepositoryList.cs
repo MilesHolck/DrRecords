@@ -50,7 +50,23 @@ namespace DrRecords.Repositories
             return musicRecord;
         }
 
+        //få music records via ID - TODO: mangler test 
+        public MusicRecord? GetMusicRecordById(int id)
+        {
+            return _MusicRecords.FirstOrDefault(b => b.Id == id);
+        }
 
+
+        //slette music records via ID - TODO: mangler test 
+        public MusicRecord? DeleteByIdMusicRecord(int id)
+        {
+            MusicRecord? musicRecordToDelete = GetMusicRecordById(id);
+            if (musicRecordToDelete != null)
+            {
+                _MusicRecords.Remove(musicRecordToDelete);
+            }
+            return musicRecordToDelete;
+        }
 
     }
 }
