@@ -121,6 +121,68 @@ namespace DrRecordsTest
             Assert.NotNull(result);
             Assert.Empty(result);
         }
+
+        [Fact]
+        public void GetMusicRecordById_WithValidId_ReturnsCorrectRecord()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(1);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Id);
+            Assert.Equal("Ofelia", result.Title);
+            Assert.Equal("Taylor Swift", result.Artist);
+        }
+
+        [Fact]
+        public void GetMusicRecordById_WithNonExistentId_ReturnsNull()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(999);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void GetMusicRecordById_WithDifferentValidId_ReturnsCorrectRecord()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(2);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Id);
+            Assert.Equal("music of the night", result.Title);
+            Assert.Equal("Andrew webber", result.Artist);
+        }
+
+        [Fact]
+        public void DeleteByIdMusicRecord_WithValidId_RemovesRecordAndReturnsIt()
+        {
+            // Act
+            var deletedRecord = _repo.DeleteByIdMusicRecord(1);
+            var remainingRecords = _repo.GetAllMusicRecords();
+
+            // Assert
+            Assert.NotNull(deletedRecord);
+            Assert.Equal(1, deletedRecord.Id);
+            Assert.Equal("Ofelia", deletedRecord.Title);
+            Assert.Equal(2, remainingRecords.Count());
+        }
+
+        [Fact]
+        public void DeleteByIdMusicRecord_WithNonExistentId_ReturnsNullAndDoesNotModifyList()
+        {
+            // Act
+            var deletedRecord = _repo.DeleteByIdMusicRecord(999);
+            var remainingRecords = _repo.GetAllMusicRecords();
+
+            // Assert
+            Assert.Null(deletedRecord);
+            Assert.Equal(3, remainingRecords.Count());
+        }
     }
 
     public class AuthControllerTests
