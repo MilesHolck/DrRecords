@@ -50,7 +50,37 @@ namespace DrRecords.Repositories
             return musicRecord;
         }
 
+        //få music records via ID
+        public MusicRecord? GetMusicRecordById(int id)
+        {
+            return _MusicRecords.FirstOrDefault(b => b.Id == id);
+        }
 
+        //update music records via ID
+        public MusicRecord? UpdateMusicRecord(int id, MusicRecord updatedMusicRecord)
+        {
+            MusicRecord? musicRecord = GetMusicRecordById(id);
+
+            if (musicRecord != null)
+            {
+                musicRecord.Title = updatedMusicRecord.Title;
+                musicRecord.Artist = updatedMusicRecord.Artist;
+                musicRecord.Duration = updatedMusicRecord.Duration;
+                musicRecord.PublicationYear = updatedMusicRecord.PublicationYear;
+            }
+            return musicRecord;
+        }
+
+        //slette music records via ID
+        public MusicRecord? DeleteByIdMusicRecord(int id)
+        {
+            MusicRecord? musicRecordToDelete = GetMusicRecordById(id);
+            if (musicRecordToDelete != null)
+            {
+                _MusicRecords.Remove(musicRecordToDelete);
+            }
+            return musicRecordToDelete;
+        }
 
     }
 }

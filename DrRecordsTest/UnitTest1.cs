@@ -121,6 +121,137 @@ namespace DrRecordsTest
             Assert.NotNull(result);
             Assert.Empty(result);
         }
+
+        [Fact]
+        public void GetMusicRecordById_WithValidId_ReturnsCorrectRecord()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(1);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Id);
+            Assert.Equal("Ofelia", result.Title);
+            Assert.Equal("Taylor Swift", result.Artist);
+        }
+
+        [Fact]
+        public void GetMusicRecordById_WithNonExistentId_ReturnsNull()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(999);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void GetMusicRecordById_WithDifferentValidId_ReturnsCorrectRecord()
+        {
+            // Act
+            var result = _repo.GetMusicRecordById(2);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Id);
+            Assert.Equal("music of the night", result.Title);
+            Assert.Equal("Andrew webber", result.Artist);
+        }
+
+        [Fact]
+        public void DeleteByIdMusicRecord_WithValidId_RemovesRecordAndReturnsIt()
+        {
+            // Act
+            var deletedRecord = _repo.DeleteByIdMusicRecord(1);
+            var remainingRecords = _repo.GetAllMusicRecords();
+
+            // Assert
+            Assert.NotNull(deletedRecord);
+            Assert.Equal(1, deletedRecord.Id);
+            Assert.Equal("Ofelia", deletedRecord.Title);
+            Assert.Equal(2, remainingRecords.Count());
+        }
+
+        [Fact]
+        public void DeleteByIdMusicRecord_WithNonExistentId_ReturnsNullAndDoesNotModifyList()
+        {
+            // Act
+            var deletedRecord = _repo.DeleteByIdMusicRecord(999);
+            var remainingRecords = _repo.GetAllMusicRecords();
+
+            // Assert
+            Assert.Null(deletedRecord);
+            Assert.Equal(3, remainingRecords.Count());
+        }
+
+        [Fact]
+        public void UpdateMusicRecord_WithValidId_UpdatesRecordSuccessfully()
+        {
+            // Arrange
+            var updatedRecord = new MusicRecord
+            {
+                Title = "Updated Title",
+                Artist = "Updated Artist",
+                Duration = 200,
+                PublicationYear = 2024
+            };
+
+            // Act
+            var result = _repo.UpdateMusicRecord(1, updatedRecord);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Id);
+            Assert.Equal("Updated Title", result.Title);
+            Assert.Equal("Updated Artist", result.Artist);
+            Assert.Equal(200, result.Duration);
+            Assert.Equal(2024, result.PublicationYear);
+        }
+
+        [Fact]
+        public void UpdateMusicRecord_WithNonExistentId_ReturnsNull()
+        {
+            // Arrange
+            var updatedRecord = new MusicRecord
+            {
+                Title = "Updated Title",
+                Artist = "Updated Artist",
+                Duration = 200,
+                PublicationYear = 2024
+            };
+
+            // Act
+            var result = _repo.UpdateMusicRecord(999, updatedRecord);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void UpdateMusicRecord_UpdateOnlySpecificFields_VerifyOnlyFieldsChanged()
+        {
+            // Arrange
+            var updatedRecord = new MusicRecord
+            {
+                Title = "New Title Only",
+                Artist = "New Artist Only",
+                Duration = 300,
+                PublicationYear = 2025
+            };
+            var originalRecord = _repo.GetMusicRecordById(2);
+
+            // Act
+            var result = _repo.UpdateMusicRecord(2, updatedRecord);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Id); // ID should not change
+            Assert.Equal("New Title Only", result.Title); // Should be updated
+            Assert.Equal("New Artist Only", result.Artist); // Should be updated
+            Assert.Equal(300, result.Duration); // Should be updated
+            Assert.Equal(2025, result.PublicationYear); // Should be updated
+            Assert.NotEqual(originalRecord?.Title, result.Title);
+        }
     }
 
     public class AuthControllerTests
