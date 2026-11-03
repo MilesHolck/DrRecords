@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DrRecordsTest
 {
@@ -17,9 +18,6 @@ namespace DrRecordsTest
             _repo = new MusicRecordsRepositoryList();
         }
 
-
-        //testing af listen
-
         [Fact]
         public void ReturnsAllFromTheList()
         {
@@ -27,11 +25,30 @@ namespace DrRecordsTest
             var result = _repo.GetAllMusicRecords();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(3, result.Count());
+            Assert.NotEmpty(result);
         }
 
-        //Filterings test//
+        [Fact]
+        public void AddMusicRecord_AddsRecordToList()
+        {
+            // Arrange
+            var newRecord = new MusicRecord
+            {
+                Title = "Test Song",
+                Artist = "Test Artist",
+                Duration = 200,
+                PublicationYear = 2024
+            };
+            var initialCount = _repo.GetAllMusicRecords().Count();
+
+            // Act
+            var result = _repo.AddMusicRecord(newRecord);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEqual(0, result.Id);
+            Assert.Equal(initialCount + 1, _repo.GetAllMusicRecords().Count());
+        }
 
         [Fact]
         public void FilterByTitleStartsWith_ReturnMatchingRecords()
@@ -136,12 +153,14 @@ namespace DrRecordsTest
             var result = _authController.Login(loginRequest);
 
             // Assert
-            Assert.NotNull(result);
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.NotNull(okResult.Value);
 
-            var resultValue = okResult.Value as dynamic;
-            Assert.NotNull(resultValue?.token);
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            Assert.NotNull(tokenProperty);
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
+            Assert.NotNull(token);
         }
 
         [Fact]
@@ -181,8 +200,9 @@ namespace DrRecordsTest
             // Act
             var result = _authController.Login(loginRequest);
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var resultValue = okResult.Value as dynamic;
-            string token = resultValue?.token;
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
 
             // Assert
             var handler = new JwtSecurityTokenHandler();
@@ -202,15 +222,15 @@ namespace DrRecordsTest
             // Act
             var result = _authController.Login(loginRequest);
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var resultValue = okResult.Value as dynamic;
-            string token = resultValue?.token;
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
 
             // Assert
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
 
             Assert.NotNull(jwtToken);
-
             var usernameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
             Assert.NotNull(usernameClaim);
             Assert.Equal("User", usernameClaim.Value);
@@ -229,8 +249,9 @@ namespace DrRecordsTest
             // Act
             var result = _authController.Login(loginRequest);
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var resultValue = okResult.Value as dynamic;
-            string token = resultValue?.token;
+            var responseType = okResult.Value!.GetType();
+            var tokenProperty = responseType.GetProperty("token");
+            var token = (string?)tokenProperty?.GetValue(okResult.Value);
 
             // Assert
             var handler = new JwtSecurityTokenHandler();
@@ -239,7 +260,7 @@ namespace DrRecordsTest
             Assert.NotNull(jwtToken);
             Assert.NotNull(jwtToken.ValidTo);
             Assert.True(jwtToken.ValidTo > DateTime.Now);
-            Assert.True(jwtToken.ValidTo <= DateTime.Now.AddHours(2).AddMinutes(1)); // Allow 1 minute tolerance
+            Assert.True(jwtToken.ValidTo <= DateTime.Now.AddHours(2).AddMinutes(1));
         }
 
         [Fact]

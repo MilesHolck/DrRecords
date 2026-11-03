@@ -4,6 +4,7 @@ namespace DrRecords.Repositories
 {
     public interface IMusicRecordsRepositoryList
     {
+        MusicRecord AddMusicRecord(MusicRecord musicRecord);
         IEnumerable<MusicRecord> GetAllMusicRecords(string? titleStartsWith = null, string? artistStartsWith = null);
     }
 }

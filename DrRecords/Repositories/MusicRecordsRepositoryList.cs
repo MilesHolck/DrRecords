@@ -2,6 +2,8 @@
 
 namespace DrRecords.Repositories
 {
+    
+
     public class MusicRecordsRepositoryList : IMusicRecordsRepositoryList
     {
         private readonly List<MusicRecord> _MusicRecords;
@@ -39,7 +41,14 @@ namespace DrRecords.Repositories
             return filteredRecords;
         }
 
+        //add metode
 
+        public MusicRecord AddMusicRecord(MusicRecord musicRecord)
+        {
+            musicRecord.Id = _nextId++;
+            _MusicRecords.Add(musicRecord);
+            return musicRecord;
+        }
 
 
 
