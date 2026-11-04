@@ -72,7 +72,7 @@ namespace DrRecords.Controllers
 
         // DELETE: api/musicrecords/5  (kræver login)
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

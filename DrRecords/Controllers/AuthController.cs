@@ -23,37 +23,47 @@ namespace DrRecords.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest login)
         {
-            // 1. Validate the user (In a real scenario, check your database here)
-            // Here we use a simple hardcoded check:
-            if (login.Username == "User" && login.Password == "1234")
+            if (login.Username == "admin" && login.Password == "1234")
             {
-                var token = GenerateJwtToken(login.Username);
-                return Ok(new { token });
+                string role = "Admin";
+                string token = GenerateJwtToken(login.Username, role);
+                return Ok(new { token, role });
+            }
+            else if (login.Username == "anders" && login.Password == "Secret12")
+            {
+                string role = "User";
+                string token = GenerateJwtToken(login.Username, role);
+                return Ok(new { token, role });
+            }
+            else if (login.Username == "peter" && login.Password == "password")
+            {
+                string role = "User";
+                string token = GenerateJwtToken(login.Username, role);
+                return Ok(new { token, role });
             }
 
             return Unauthorized("Invalid username or password.");
         }
 
-        private string GenerateJwtToken(string username)
+        private string GenerateJwtToken(string username, string role)
         {
-            var jwtSettings = _config.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            IConfigurationSection jwtSettings = _config.GetSection("Jwt");
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Claims are the pieces of information "baked" into the token
-            var claims = new[]
+            Claim[] claims = new Claim[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, username),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, "admin") // You can add roles here
+                new Claim(ClaimTypes.Role, role)
             };
 
-            var token = new JwtSecurityToken(
+            JwtSecurityToken token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(2), // Token is valid for 2 hours
+                expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds
             );
 
