@@ -238,7 +238,7 @@ namespace DrRecordsTest
                 Duration = 300,
                 PublicationYear = 2025
             };
-            var originalRecord = _repo.GetMusicRecordById(2);
+            string? originalTitle = _repo.GetMusicRecordById(2)?.Title;
 
             // Act
             var result = _repo.UpdateMusicRecord(2, updatedRecord);
@@ -250,7 +250,7 @@ namespace DrRecordsTest
             Assert.Equal("New Artist Only", result.Artist); // Should be updated
             Assert.Equal(300, result.Duration); // Should be updated
             Assert.Equal(2025, result.PublicationYear); // Should be updated
-            Assert.NotEqual(originalRecord?.Title, result.Title);
+            Assert.NotEqual(originalTitle, result.Title);
         }
     }
 

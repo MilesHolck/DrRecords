@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using DrRecords.Repositories;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,19 @@ builder.Services.AddAuthorization();
 
 // Add services to the container.
 
+// Repository: Singleton = ét objekt for hele appen, så listen ikke nulstilles ved hvert request
+builder.Services.AddSingleton<IMusicRecordsRepositoryList, MusicRecordsRepositoryList>();
+
+// CORS: tillad at vores frontend (en anden "origin") må kalde API'et
+const string AllowAllPolicy = "AllowAll";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AllowAllPolicy, policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -51,9 +65,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization(); //hvem er du?
+app.UseCors(AllowAllPolicy);
 
-app.UseAuthentication(); //hvad må du?
+app.UseAuthentication(); //hvem er du? (skal komme FØR authorization)
+
+app.UseAuthorization(); //hvad må du?
 
 app.MapControllers();
 

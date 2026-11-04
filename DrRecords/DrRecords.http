@@ -1,6 +1,18 @@
-@DrRecords_HostAddress = http://localhost:5220
+@DrRecords_HostAddress = https://localhost:7118
 
-GET {{DrRecords_HostAddress}}/weatherforecast/
+GET {{DrRecords_HostAddress}}/api/musicrecords
 Accept: application/json
+
+###
+
+GET {{DrRecords_HostAddress}}/api/musicrecords?artistStartsWith=taylor
+Accept: application/json
+
+###
+
+POST {{DrRecords_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{ "username": "User", "password": "1234" }
 
 ###

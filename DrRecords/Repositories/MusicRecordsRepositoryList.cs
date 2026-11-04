@@ -8,7 +8,7 @@ namespace DrRecords.Repositories
     {
         private readonly List<MusicRecord> _MusicRecords;
 
-        private int _nextId = 1;
+        private int _nextId = 4; // starter efter de 3 testdata-plader (id 1-3)
 
         public MusicRecordsRepositoryList()
         {
